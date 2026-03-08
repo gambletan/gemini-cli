@@ -6,6 +6,16 @@
 
 import open from 'open';
 import process from 'node:process';
+
+/**
+ * Check if the process is running inside a sandbox.
+ * Returns false for SANDBOX='0' or SANDBOX='false' (treated as not in sandbox).
+ */
+function isInsideSandbox(): boolean {
+  const sandboxEnv = process.env['SANDBOX']?.toLowerCase().trim();
+  return !!(sandboxEnv && sandboxEnv !== '0' && sandboxEnv !== 'false');
+}
+
 import {
   type CommandContext,
   type SlashCommand,
@@ -36,9 +46,11 @@ export const bugCommand: SlashCommand = {
 
     const osVersion = `${process.platform} ${process.version}`;
     let sandboxEnv = 'no sandbox';
-    if (process.env['SANDBOX'] && process.env['SANDBOX'] !== 'sandbox-exec') {
-      sandboxEnv = process.env['SANDBOX'].replace(/^gemini-(?:code-)?/, '');
-    } else if (process.env['SANDBOX'] === 'sandbox-exec') {
+    const sandbox = process.env['SANDBOX'];
+    const insideSandbox = isInsideSandbox();
+    if (insideSandbox && sandbox !== 'sandbox-exec') {
+      sandboxEnv = sandbox?.replace(/^gemini-(?:code-)?/, '') ?? '';
+    } else if (sandbox === 'sandbox-exec') {
       sandboxEnv = `sandbox-exec (${
         process.env['SEATBELT_PROFILE'] || 'unknown'
       })`;

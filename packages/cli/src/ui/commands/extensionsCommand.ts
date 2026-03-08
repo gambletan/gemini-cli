@@ -4,6 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import process from 'node:process';
+
+/**
+ * Check if the process is running inside a sandbox.
+ * Returns false for SANDBOX='0' or SANDBOX='false' (treated as not in sandbox).
+ */
+function isInsideSandbox(): boolean {
+  const sandboxEnv = process.env['SANDBOX']?.toLowerCase().trim();
+  return !!(sandboxEnv && sandboxEnv !== '0' && sandboxEnv !== 'false');
+}
+
 import {
   debugLogger,
   listExtensions,
@@ -24,7 +35,6 @@ import {
   CommandKind,
 } from './types.js';
 import open from 'open';
-import process from 'node:process';
 import {
   ExtensionManager,
   inferInstallMetadata,
@@ -299,10 +309,7 @@ async function exploreAction(
       type: MessageType.INFO,
       text: `Would open extensions page in your browser: ${extensionsUrl} (skipped in test environment)`,
     });
-  } else if (
-    process.env['SANDBOX'] &&
-    process.env['SANDBOX'] !== 'sandbox-exec'
-  ) {
+  } else if (isInsideSandbox() && process.env['SANDBOX'] !== 'sandbox-exec') {
     context.ui.addItem({
       type: MessageType.INFO,
       text: `View available extensions at ${extensionsUrl}`,

@@ -6,6 +6,7 @@
 
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
+import process from 'node:process';
 import {
   Storage,
   shutdownTelemetry,
@@ -13,6 +14,15 @@ import {
   ExitCodes,
 } from '@google/gemini-cli-core';
 import type { Config } from '@google/gemini-cli-core';
+
+/**
+ * Check if the process is running inside a sandbox.
+ * Returns false for SANDBOX='0' or SANDBOX='false' (treated as not in sandbox).
+ */
+function isInsideSandbox(): boolean {
+  const sandboxEnv = process.env['SANDBOX']?.toLowerCase().trim();
+  return !!(sandboxEnv && sandboxEnv !== '0' && sandboxEnv !== 'false');
+}
 
 const cleanupFunctions: Array<(() => void) | (() => Promise<void>)> = [];
 const syncCleanupFunctions: Array<() => void> = [];
@@ -135,7 +145,7 @@ export function setupTtyCheck(): () => void {
       return;
     }
 
-    if (process.env['SANDBOX']) {
+    if (isInsideSandbox()) {
       return;
     }
 

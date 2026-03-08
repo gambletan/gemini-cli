@@ -15,6 +15,15 @@ import {
   getVersion,
 } from '@google/gemini-cli-core';
 
+/**
+ * Check if the process is running inside a sandbox.
+ * Returns false for SANDBOX='0' or SANDBOX='false' (treated as not in sandbox).
+ */
+function isInsideSandbox(): boolean {
+  const sandboxEnv = process.env['SANDBOX']?.toLowerCase().trim();
+  return !!(sandboxEnv && sandboxEnv !== '0' && sandboxEnv !== 'false');
+}
+
 export const aboutCommand: SlashCommand = {
   name: 'about',
   description: 'Show version info',
@@ -23,9 +32,11 @@ export const aboutCommand: SlashCommand = {
   action: async (context) => {
     const osVersion = process.platform;
     let sandboxEnv = 'no sandbox';
-    if (process.env['SANDBOX'] && process.env['SANDBOX'] !== 'sandbox-exec') {
-      sandboxEnv = process.env['SANDBOX'];
-    } else if (process.env['SANDBOX'] === 'sandbox-exec') {
+    const sandbox = process.env['SANDBOX'];
+    const insideSandbox = isInsideSandbox();
+    if (insideSandbox && sandbox !== 'sandbox-exec') {
+      sandboxEnv = sandbox ?? '';
+    } else if (sandbox === 'sandbox-exec') {
       sandboxEnv = `sandbox-exec (${
         process.env['SEATBELT_PROFILE'] || 'unknown'
       })`;

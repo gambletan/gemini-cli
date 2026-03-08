@@ -503,8 +503,17 @@ export async function main() {
   // Run deferred command now that we have admin settings.
   await runDeferredCommand(settings.merged);
 
+  /**
+   * Check if the process is running inside a sandbox.
+   * Returns false for SANDBOX='0' or SANDBOX='false' (treated as not in sandbox).
+   */
+  const isInsideSandbox = () => {
+    const sandboxEnv = process.env['SANDBOX']?.toLowerCase().trim();
+    return !!(sandboxEnv && sandboxEnv !== '0' && sandboxEnv !== 'false');
+  };
+
   // hop into sandbox if we are outside and sandboxing is enabled
-  if (!process.env['SANDBOX']) {
+  if (!isInsideSandbox()) {
     const memoryArgs = settings.merged.advanced.autoConfigureMemory
       ? getNodeMemoryArgs(isDebugMode)
       : [];

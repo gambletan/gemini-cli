@@ -266,7 +266,9 @@ export class PromptProvider {
 // --- Internal Context Helpers ---
 
 function getSandboxMode(): snippets.SandboxMode {
-  if (process.env['SANDBOX'] === 'sandbox-exec') return 'macos-seatbelt';
-  if (process.env['SANDBOX']) return 'generic';
+  const sandboxEnv = process.env['SANDBOX']?.toLowerCase().trim();
+  if (sandboxEnv === 'sandbox-exec') return 'macos-seatbelt';
+  if (sandboxEnv && sandboxEnv !== '0' && sandboxEnv !== 'false')
+    return 'generic';
   return 'outside';
 }

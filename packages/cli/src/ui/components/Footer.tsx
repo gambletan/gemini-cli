@@ -61,6 +61,15 @@ interface SandboxIndicatorProps {
   isTrustedFolder: boolean | undefined;
 }
 
+/**
+ * Check if the process is running inside a sandbox.
+ * Returns false for SANDBOX='0' or SANDBOX='false' (treated as not in sandbox).
+ */
+function isInsideSandbox(): boolean {
+  const sandboxEnv = process.env['SANDBOX']?.toLowerCase().trim();
+  return !!(sandboxEnv && sandboxEnv !== '0' && sandboxEnv !== 'false');
+}
+
 const SandboxIndicator: React.FC<SandboxIndicatorProps> = ({
   isTrustedFolder,
 }) => {
@@ -69,9 +78,10 @@ const SandboxIndicator: React.FC<SandboxIndicatorProps> = ({
   }
 
   const sandbox = process.env['SANDBOX'];
-  if (sandbox && sandbox !== 'sandbox-exec') {
+  const insideSandbox = isInsideSandbox();
+  if (insideSandbox && sandbox !== 'sandbox-exec') {
     return (
-      <Text color="green">{sandbox.replace(/^gemini-(?:cli-)?/, '')}</Text>
+      <Text color="green">{sandbox?.replace(/^gemini-(?:cli-)?/, '')}</Text>
     );
   }
 
@@ -290,10 +300,12 @@ export const Footer: React.FC = () => {
       case 'sandbox': {
         let str = 'no sandbox';
         const sandbox = process.env['SANDBOX'];
+        const insideSandbox = isInsideSandbox();
         if (isTrustedFolder === false) str = 'untrusted';
         else if (sandbox === 'sandbox-exec')
           str = `macOS Seatbelt (${process.env['SEATBELT_PROFILE']})`;
-        else if (sandbox) str = sandbox.replace(/^gemini-(?:cli-)?/, '');
+        else if (insideSandbox)
+          str = sandbox?.replace(/^gemini-(?:cli-)?/, '') ?? '';
 
         addCol(
           id,

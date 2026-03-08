@@ -10,6 +10,15 @@ import { once } from 'node:events';
 import { debugLogger } from './debugLogger.js';
 import { coreEvents, CoreEvent, type EditorSelectedPayload } from './events.js';
 
+/**
+ * Check if the process is running inside a sandbox.
+ * Returns false for SANDBOX='0' or SANDBOX='false' (treated as not in sandbox).
+ */
+function isInsideSandbox(): boolean {
+  const sandboxEnv = process.env['SANDBOX']?.toLowerCase().trim();
+  return !!(sandboxEnv && sandboxEnv !== '0' && sandboxEnv !== 'false');
+}
+
 const GUI_EDITORS = [
   'vscode',
   'vscodium',
@@ -157,7 +166,7 @@ export function getEditorCommand(editor: EditorType): string {
 }
 
 export function allowEditorTypeInSandbox(editor: EditorType): boolean {
-  const notUsingSandbox = !process.env['SANDBOX'];
+  const notUsingSandbox = !isInsideSandbox();
   if (isGuiEditor(editor)) {
     return notUsingSandbox;
   }
